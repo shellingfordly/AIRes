@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客爬虫配置与结果展示</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input, button { padding: 5px; width: 100%; max-width: 400px; }
+    #results { margin-top: 20px; }
+    .article { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>博客爬虫配置</h1>
+  <form id="configForm">
+    <div class="form-group">
+      <label for="blogPageUrl">博客页面 URL:</label>
+      <input type="text" id="blogPageUrl" value="">
+    </div>
+    <div class="form-group">
+      <label for="linkSuffix">链接后缀 (如 page):</label>
+      <input type="text" id="linkSuffix" value="page">
+    </div>
+    <div class="form-group">
+      <label for="linkSelector">链接选择器:</label>
+      <input type="text" id="linkSelector" value="a[href^='/blog/']">
+    </div>
+    <div class="form-group">
+      <label for="excludePattern">排除模式:</label>
+      <input type="text" id="excludePattern" value="/page/">
+    </div>
+    <div class="form-group">
+      <label for="titleSelector">标题选择器:</label>
+      <input type="text" id="titleSelector" value="title">
+    </div>
+    <div class="form-group">
+      <label for="contentSelector">内容选择器:</label>
+      <input type="text" id="contentSelector" value="article">
+    </div>
+    <div class="form-group">
+      <label for="imageSelector">图片选择器:</label>
+      <input type="text" id="imageSelector" value="article img">
+    </div>
+    <div class="form-group">
+      <label for="retryAttempts">重试次数:</label>
+      <input type="number" id="retryAttempts" value="2">
+    </div>
+    <div class="form-group">
+      <label for="maxExtraPages">最大额外分页:</label>
+      <input type="number" id="maxExtraPages" value="3">
+    </div>
+    <button type="submit">开始爬取</button>
+  </form>
+
+  <h2>爬取结果</h2>
+  <button id="refreshResults">刷新结果</button>
+  <div id="results"></div>
+
+  <script>
+    const form = document.getElementById('configForm');
+    const resultsDiv = document.getElementById('results');
+    const refreshBtn = document.getElementById('refreshResults');
+
+    // 提交配置并启动爬取
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const config = {
+        blogPageUrl: document.getElementById('blogPageUrl').value,
+        linkSuffix: document.getElementById('linkSuffix').value,
+        linkSelector: document.getElementById('linkSelector').value,
+        excludePattern: document.getElementById('excludePattern').value,
+        titleSelector: document.getElementById('titleSelector').value,
+        contentSelector: document.getElementById('contentSelector').value,
+        imageSelector: document.getElementById('imageSelector').value,
+        retryAttempts: parseInt(document.getElementById('retryAttempts').value),
+        maxExtraPages: parseInt(document.getElementById('maxExtraPages').value),
+      };
+
+      try {
+        const response = await fetch('http://localhost:3000/crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config),
+        });
+        const result = await response.json();
+        alert(result.message);
+        loadResults(); // 爬取完成后自动加载结果
+      } catch (error) {
+        alert('爬取失败: ' + error.message);
+      }
+    });
+
+    // 加载并展示结果
+    async function loadResults() {
+      try {
+        const response = await fetch('http://localhost:3000/results');
+        const articles = await response.json();
+        resultsDiv.innerHTML = '';
+        articles.forEach(article => {
+          const div = document.createElement('div');
+          div.className = 'article';
+          div.innerHTML = `
+            <h3>${article.title}</h3>
+            <p><strong>URL:</strong> <a href="${article.url}" target="_blank">${article.url}</a></p>
+            <p><strong>内容:</strong></p>
+            <ul>${article.content.map(line => `<li>${line}</li>`).join('')}</ul>
+            <p><strong>图片:</strong> ${article.images.map(img => `<a href="${img}" target="_blank">${img}</a>`).join(', ')}</p>
+          `;
+          resultsDiv.appendChild(div);
+        });
+      } catch (error) {
+        resultsDiv.innerHTML = '加载结果失败: ' + error.message;
+      }
+    }
+
+    // 刷新结果按钮
+    refreshBtn.addEventListener('click', loadResults);
+
+    // 初始加载结果
+    loadResults();
+  </script>
+</body>
+</html>
