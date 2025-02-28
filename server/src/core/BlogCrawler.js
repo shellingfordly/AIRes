@@ -124,7 +124,7 @@ class BlogCrawler {
 			return;
 		}
 
-		console.log(`总计找到 ${this.allLinks.size} 个唯一链接：`, Array.from(this.allLinks));
+		console.log(`总计找到 ${this.allLinks.size} 个唯一链接`);
 		this.broadcast({ type: 'status', message: `总计找到 ${this.allLinks.size} 个链接，开始爬取内容` });
 
 		for (const link of this.allLinks) {
