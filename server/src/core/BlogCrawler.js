@@ -59,17 +59,93 @@ class BlogCrawler {
 		}
 	}
 
+	// 清理标题的函数
+	cleanTitle(rawTitle) {
+		return rawTitle;
+		// 移除常见分隔符及其后面的内容
+		// let title = rawTitle.replace(/\s*[-|]\s*.+$/, '').trim();
+
+		// // 定义常见无关关键词（可扩展）
+		// const unwantedKeywords = [
+		// 	'iconLinkedIn', 'iconGitHub', 'iconTwitter', 'iconFacebook',
+		// 	'LinkedIn', 'GitHub', 'Twitter', 'Facebook', // 社交媒体名称
+		// ];
+
+		// // 分割标题并过滤关键词
+		// const parts = title.split(/\s+/);
+		// title = parts.filter(part => !unwantedKeywords.some(keyword => part.toLowerCase().includes(keyword.toLowerCase()))).join(' ');
+
+		// 移除多余空格并返回
+		// return title.trim();
+	}
+
+	// 清理内容并过滤空标签
+	cleanContent($, elements, articleUrl) {
+		const content = [];
+		elements.each((i, element) => {
+			const $el = $(element);
+			const tagName = $el[0].tagName;
+			let innerContent = '';
+
+			// 处理 img 标签
+			if (tagName === 'img') {
+				const src = $el.attr('src');
+				if (src) { // 只保留有 src 的 img
+					const fullSrc = src.startsWith('http') ? src : new URL(src, articleUrl).href;
+					innerContent = `<img src="${fullSrc}">`;
+				}
+			} else {
+				// 处理其他标签，递归清理并检查内容
+				innerContent = $el.contents().map((_, child) => {
+					if (child.type === 'text') {
+						const text = $(child).text().trim();
+						return text ? text : '';
+					}
+					if (child.type === 'tag') {
+						const childTag = child.tagName;
+						if (childTag === 'img') {
+							const src = $(child).attr('src');
+							if (src) {
+								const fullSrc = src.startsWith('http') ? src : new URL(src, articleUrl).href;
+								return `<img src="${fullSrc}">`;
+							}
+							return '';
+						}
+						// 递归处理子节点，只有非空内容才保留
+						const cleanedChild = $(child).contents().map((_, subChild) => {
+							if (subChild.type === 'text') return $(subChild).text().trim();
+							if (subChild.type === 'tag') return this.cleanContent($, $(subChild), articleUrl)[0] || '';
+							return '';
+						}).get().join('').trim();
+						return cleanedChild ? `<${childTag}>${cleanedChild}</${childTag}>` : '';
+					}
+					return '';
+				}).get().join('').trim();
+			}
+
+			// 只有非空内容才添加到结果
+			if (innerContent) {
+				const cleanHtml = `<${tagName}>${innerContent}</${tagName}>`;
+				content.push(cleanHtml);
+			}
+		});
+		return content;
+	}
+
 	async getArticleContent(articleUrl) {
 		try {
 			const response = await axios.get(articleUrl);
 			const $ = cheerio.load(response.data);
 
-			const title = $(this.config.titleSelector).text().trim();
-			const content = [];
-			$(this.config.contentSelector).children().each((i, element) => {
-				const html = $.html(element).trim();
-				if (html) content.push(html);
-			});
+			// title
+			const rawTitle = $(this.config.titleSelector).text().trim();
+			const title = this.cleanTitle(rawTitle);
+
+			// content
+			const contentElements = $(this.config.contentSelector).children();
+			const content = this.cleanContent($, contentElements, articleUrl);
+
+			// images
 			const images = [];
 			$(this.config.imageSelector).each((i, element) => {
 				const src = $(element).attr('src');

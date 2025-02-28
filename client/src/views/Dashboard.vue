@@ -75,11 +75,7 @@
 					<h3 class="card-title">{{ article.title }}</h3>
 					<p><strong>URL:</strong> <a :href="article.url" target="_blank" class="link link-primary">{{
 						article.url }}</a></p>
-					<p><strong>内容:</strong></p>
-					<ul class="list-disc pl-5" v-html="article.content.map(line => `<li>${line}</li>`).join('')"></ul>
-					<p><strong>图片:</strong> <span
-							v-html="article.images.map(img => `<a href='${img}' target='_blank' class='link link-primary'>${img}</a>`).join(', ')"></span>
-					</p>
+					<div v-html="article.content"> </div>
 				</div>
 			</div>
 		</div>
@@ -122,7 +118,7 @@ const config = ref<CrawlerConfig>({
 	linkSuffix: 'page',
 	linkSelector: "a[href^='/blog/']",
 	excludePattern: '/page/',
-	titleSelector: 'title',
+	titleSelector: 'h1',
 	contentSelector: 'article',
 	imageSelector: 'article img',
 	retryAttempts: 2,
@@ -153,7 +149,7 @@ const startCrawlingRequest = async (config: CrawlerConfig) => {
 
 // 封装 WebSocket
 const initWebSocket = () => {
-	const ws = new WebSocket('ws://localhost:3000');
+	const ws = new WebSocket('/ws');
 	ws.onopen = () => console.log('WebSocket 已连接');
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
