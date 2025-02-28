@@ -1,12 +1,13 @@
 {
   "dependencies": {
     "axios": "^1.8.1",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "express": "^4.21.2",
+    "ws": "^8.18.1"
   },
   "name": "AIRes",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

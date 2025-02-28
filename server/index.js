@@ -1,49 +1,31 @@
-const fs = require('fs');
-const http = require('http');
-const path = require('path');
-const { BlogCrawler } = require('./src/core/BlogCrawler');
+const express = require('express');
+const { WebSocketServer } = require('ws');
+const router = require('./src/routes/index');
 
-// 创建全局爬虫实例
-let crawler = new BlogCrawler();
+const app = express();
 
-// HTTP 服务器
-const server = http.createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/') {
-    // 返回 index.html
-    fs.readFile(path.join(__dirname, 'index.html'), 'utf8', (err, data) => {
-      if (err) {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('服务器错误');
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(data);
-    });
-  } else if (req.method === 'POST' && req.url === '/crawl') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
-      try {
-        const config = JSON.parse(body);
-        crawler = new BlogCrawler(config); // 重置爬虫实例
-        await crawler.crawl();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'success', message: '爬取完成' }));
-      } catch (error) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'error', message: error.message }));
-      }
-    });
-  } else if (req.method === 'GET' && req.url === '/results') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(crawler.getResults()));
-  } else {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'error', message: '接口不存在' }));
-  }
+// 中间件：解析 JSON 请求体
+app.use(express.json());
+
+// 注册路由
+app.use('/', router);
+
+// 启动 HTTP 服务器
+const PORT = 3000;
+const server = app.listen(PORT, () => {
+  console.log(`服务器运行在 http://localhost:${PORT}`);
 });
 
-// 启动服务器
-server.listen(3000, () => {
-  console.log('服务器运行在 http://localhost:3000');
+// 创建 WebSocket 服务器
+const wss = new WebSocketServer({ server });
+
+// WebSocket 连接管理
+wss.on('connection', (ws) => {
+  console.log('WebSocket 客户端已连接');
+  ws.on('close', () => console.log('WebSocket 客户端已断开'));
 });
+
+// 提供方法供 BlogCrawler 推送实时数据
+app.set('wss', wss);
+
+module.exports = app; // 导出 app 以便在路由中使用

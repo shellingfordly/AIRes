@@ -1,70 +1,129 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>博客爬虫配置与结果展示</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; }
-    input, button { padding: 5px; width: 100%; max-width: 400px; }
-    #results { margin-top: 20px; }
-    .article { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    body { padding: 20px; }
+    .article { margin-bottom: 20px; }
+    .log-container { max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <h1>博客爬虫配置</h1>
-  <form id="configForm">
-    <div class="form-group">
-      <label for="blogPageUrl">博客页面 URL:</label>
-      <input type="text" id="blogPageUrl" value="">
-    </div>
-    <div class="form-group">
-      <label for="linkSuffix">链接后缀 (如 page):</label>
-      <input type="text" id="linkSuffix" value="page">
-    </div>
-    <div class="form-group">
-      <label for="linkSelector">链接选择器:</label>
-      <input type="text" id="linkSelector" value="a[href^='/blog/']">
-    </div>
-    <div class="form-group">
-      <label for="excludePattern">排除模式:</label>
-      <input type="text" id="excludePattern" value="/page/">
-    </div>
-    <div class="form-group">
-      <label for="titleSelector">标题选择器:</label>
-      <input type="text" id="titleSelector" value="title">
-    </div>
-    <div class="form-group">
-      <label for="contentSelector">内容选择器:</label>
-      <input type="text" id="contentSelector" value="article">
-    </div>
-    <div class="form-group">
-      <label for="imageSelector">图片选择器:</label>
-      <input type="text" id="imageSelector" value="article img">
-    </div>
-    <div class="form-group">
-      <label for="retryAttempts">重试次数:</label>
-      <input type="number" id="retryAttempts" value="2">
-    </div>
-    <div class="form-group">
-      <label for="maxExtraPages">最大额外分页:</label>
-      <input type="number" id="maxExtraPages" value="3">
-    </div>
-    <button type="submit">开始爬取</button>
-  </form>
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-6">博客爬虫配置</h1>
 
-  <h2>爬取结果</h2>
-  <button id="refreshResults">刷新结果</button>
-  <div id="results"></div>
+    <form id="configForm" class="card bg-base-100 shadow-xl p-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label" for="blogPageUrl"><span class="label-text">博客页面 URL</span></label>
+          <input type="text" id="blogPageUrl" value="https://humanloop.com/blog/" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="linkSuffix"><span class="label-text">链接后缀 (如 page)</span></label>
+          <input type="text" id="linkSuffix" value="page" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="linkSelector"><span class="label-text">链接选择器</span></label>
+          <input type="text" id="linkSelector" value="a[href^='/blog/']" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="excludePattern"><span class="label-text">排除模式</span></label>
+          <input type="text" id="excludePattern" value="/page/" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="titleSelector"><span class="label-text">标题选择器</span></label>
+          <input type="text" id="titleSelector" value="title" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="contentSelector"><span class="label-text">内容选择器</span></label>
+          <input type="text" id="contentSelector" value="article" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="imageSelector"><span class="label-text">图片选择器</span></label>
+          <input type="text" id="imageSelector" value="article img" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="retryAttempts"><span class="label-text">重试次数</span></label>
+          <input type="number" id="retryAttempts" value="2" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="maxExtraPages"><span class="label-text">最大额外分页</span></label>
+          <input type="number" id="maxExtraPages" value="3" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="maxPageNum"><span class="label-text">最大爬取页数 (-1 为无限制)</span></label>
+          <input type="number" id="maxPageNum" value="-1" class="input input-bordered w-full" />
+        </div>
+        <div class="form-control">
+          <label class="label" for="maxArticlesPerPage"><span class="label-text">每页最大文章数 (-1 为无限制)</span></label>
+          <input type="number" id="maxArticlesPerPage" value="-1" class="input input-bordered w-full" />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-4 w-full">开始爬取</button>
+    </form>
+
+    <h2 class="text-2xl font-bold text-center mb-4">爬取日志</h2>
+    <div id="log" class="card bg-base-200 p-4 mb-8 log-container"></div>
+
+    <h2 class="text-2xl font-bold text-center mb-4">爬取结果</h2>
+    <button id="refreshResults" class="btn btn-secondary mb-4">刷新结果</button>
+    <div id="results" class="space-y-4"></div>
+  </div>
 
   <script>
     const form = document.getElementById('configForm');
+    const logDiv = document.getElementById('log');
     const resultsDiv = document.getElementById('results');
     const refreshBtn = document.getElementById('refreshResults');
 
-    // 提交配置并启动爬取
+    // WebSocket 连接
+    const ws = new WebSocket('ws://localhost:3000');
+    ws.onopen = () => console.log('WebSocket 已连接');
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      handleWebSocketMessage(data);
+    };
+    ws.onclose = () => console.log('WebSocket 已断开');
+
+    // 处理 WebSocket 消息
+    function handleWebSocketMessage(data) {
+      switch (data.type) {
+        case 'status':
+          logDiv.innerHTML += `<p class="text-sm">${data.message}</p>`;
+          break;
+        case 'links':
+          logDiv.innerHTML += `<p class="text-sm text-blue-600">${data.page} 获取到 ${data.links.length} 个链接</p>`;
+          break;
+        case 'article':
+          const article = data.data;
+          const html = `
+            <div class="card bg-base-100 shadow-xl article">
+              <div class="card-body">
+                <h3 class="card-title">${article.title}</h3>
+                <p><strong>URL:</strong> <a href="${article.url}" target="_blank" class="link link-primary">${article.url}</a></p>
+                <p><strong>内容:</strong></p>
+                <ul class="list-disc pl-5">${article.content.map(line => `<li>${line}</li>`).join('')}</ul>
+                <p><strong>图片:</strong> ${article.images.map(img => `<a href="${img}" target="_blank" class="link link-primary">${img}</a>`).join(', ')}</p>
+              </div>
+            </div>
+          `;
+          resultsDiv.innerHTML += html;
+          break;
+        case 'error':
+          logDiv.innerHTML += `<p class="text-sm text-red-600">${data.message}</p>`;
+          break;
+        case 'complete':
+          logDiv.innerHTML += `<p class="text-sm text-green-600">${data.message}</p>`;
+          break;
+      }
+      logDiv.scrollTop = logDiv.scrollHeight; // 自动滚动到最新日志
+    }
+
+    // 提交表单
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const config = {
@@ -77,49 +136,46 @@
         imageSelector: document.getElementById('imageSelector').value,
         retryAttempts: parseInt(document.getElementById('retryAttempts').value),
         maxExtraPages: parseInt(document.getElementById('maxExtraPages').value),
+        maxPageNum: parseInt(document.getElementById('maxPageNum').value),
+        maxArticlesPerPage: parseInt(document.getElementById('maxArticlesPerPage').value),
       };
 
       try {
-        const response = await fetch('http://localhost:3000/crawl', {
+        const response = await fetch('/crawl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(config),
         });
         const result = await response.json();
-        alert(result.message);
-        loadResults(); // 爬取完成后自动加载结果
+        logDiv.innerHTML += `<p class="text-sm text-green-600">${result.message}</p>`;
       } catch (error) {
-        alert('爬取失败: ' + error.message);
+        logDiv.innerHTML += `<p class="text-sm text-red-600">爬取失败: ${error.message}</p>`;
       }
     });
 
-    // 加载并展示结果
+    // 手动刷新结果
     async function loadResults() {
       try {
-        const response = await fetch('http://localhost:3000/results');
+        const response = await fetch('/results');
         const articles = await response.json();
         resultsDiv.innerHTML = '';
         articles.forEach(article => {
-          const div = document.createElement('div');
-          div.className = 'article';
-          div.innerHTML = `
-            <h3>${article.title}</h3>
-            <p><strong>URL:</strong> <a href="${article.url}" target="_blank">${article.url}</a></p>
-            <p><strong>内容:</strong></p>
-            <ul>${article.content.map(line => `<li>${line}</li>`).join('')}</ul>
-            <p><strong>图片:</strong> ${article.images.map(img => `<a href="${img}" target="_blank">${img}</a>`).join(', ')}</p>
+          const html = `
+            <div class="card bg-base-100 shadow-xl article">
+              <div class="card-body">
+                <h3 class="card-title">${article.title}</h3>
+                <p><strong>URL:</strong> <a href="${article.url}" target="_blank" class="link link-primary">${article.url}</a></p>
+              </div>
+            </div>
           `;
-          resultsDiv.appendChild(div);
+          resultsDiv.innerHTML += html;
         });
       } catch (error) {
-        resultsDiv.innerHTML = '加载结果失败: ' + error.message;
+        resultsDiv.innerHTML = `<div class="alert alert-error">加载结果失败: ${error.message}</div>`;
       }
     }
 
-    // 刷新结果按钮
     refreshBtn.addEventListener('click', loadResults);
-
-    // 初始加载结果
     loadResults();
   </script>
 </body>
